@@ -1,0 +1,20 @@
+VPS domains:
+- M-Pesa backend: https://epay.halaleventbrite.co.ke
+- Main website: https://ticketing.halaleventbrite.co.ke
+- Mail domain: mailer.halaleventbrite.co.ke
+
+M-Pesa credentials belong in .env or your deployment provider, never in this file.
+
+Required environment variables:
+MPESA_CONSUMER_KEY=
+MPESA_CONSUMER_SECRET=
+MPESA_SHORTCODE=
+MPESA_PASSKEY=
+MPESA_CALLBACK_URL=https://epay.halaleventbrite.co.ke/api/callback
+MAIN_WEBSITE_URL=https://ticketing.halaleventbrite.co.ke
+MAILER_DOMAIN=mailer.halaleventbrite.co.ke
+FIREBASE_PROJECT_ID=halaleventbrite
+FIREBASE_SERVICE_ACCOUNT=
+
+Use FIREBASE_SERVICE_ACCOUNT for the Firebase Admin service account JSON, or
+FIREBASE_SERVICE_ACCOUNT_BASE64 for a base64-encoded version of the same JSON.
