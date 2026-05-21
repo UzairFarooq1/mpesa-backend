@@ -21,23 +21,26 @@ router.use(
 function initializeFirebaseAdmin() {
   if (admin.apps.length) return admin.firestore();
 
-  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-  const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  const raw =
+    process.env.FIREBASE_SERVICE_ACCOUNT ||
+    (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 &&
+      Buffer.from(
+        process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
+        "base64",
+      ).toString("utf8"));
 
-  if (serviceAccountJson || serviceAccountBase64) {
-    const rawServiceAccount =
-      serviceAccountJson ||
-      Buffer.from(serviceAccountBase64, "base64").toString("utf8");
-
-    admin.initializeApp({
-      credential: admin.credential.cert(JSON.parse(rawServiceAccount)),
-      projectId: process.env.FIREBASE_PROJECT_ID || "halaleventbrite",
-    });
-  } else {
-    admin.initializeApp({
-      projectId: process.env.FIREBASE_PROJECT_ID || "halaleventbrite",
-    });
+  if (!raw) {
+    throw new Error(
+      "Missing FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_BASE64",
+    );
   }
+
+  const serviceAccount = JSON.parse(raw);
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id,
+  });
 
   return admin.firestore();
 }
@@ -261,9 +264,9 @@ router.post("/api/stkpush", async (req, res) => {
     const accessToken = await getAccessToken();
     const url = `${MPESA_BASE_URL}/mpesa/stkpush/v1/processrequest`;
     const timestamp = moment().format("YYYYMMDDHHmmss");
-    const password = Buffer.from(
-      `${shortcode}${passkey}${timestamp}`,
-    ).toString("base64");
+    const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString(
+      "base64",
+    );
     const amountString = String(roundedAmount);
 
     console.log("Sending STK Push to M-Pesa:", {
@@ -352,8 +355,7 @@ router.post("/api/stkpush", async (req, res) => {
       msg: errorMessage,
       status: false,
       error: error.response?.data || error.message,
-      details:
-        process.env.NODE_ENV === "development" ? error.stack : undefined,
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 });
@@ -425,21 +427,27 @@ router.post("/api/callback", async (req, res) => {
         indexedAt: FieldValue.serverTimestamp(),
       };
 
-      await db.collection("receipts").doc(mpesaReceiptNumber).set(receiptRecord);
+      await db
+        .collection("receipts")
+        .doc(mpesaReceiptNumber)
+        .set(receiptRecord);
 
       await Promise.all(
         (previousPayment.ticketIds || []).map((id) =>
-          db.collection("tickets").doc(String(id)).set(
-            {
-              ticketId: String(id),
-              checkoutRequestID,
-              merchantRequestID,
-              mpesaReceiptNumber,
-              status: "paid",
-              paidAt: FieldValue.serverTimestamp(),
-            },
-            { merge: true },
-          ),
+          db
+            .collection("tickets")
+            .doc(String(id))
+            .set(
+              {
+                ticketId: String(id),
+                checkoutRequestID,
+                merchantRequestID,
+                mpesaReceiptNumber,
+                status: "paid",
+                paidAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true },
+            ),
         ),
       );
     }
