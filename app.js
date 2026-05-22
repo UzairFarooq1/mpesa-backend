@@ -29,19 +29,16 @@ const mpesaCallbackUrl =
   "https://epay.halaleventbrite.co.ke/api/callback";
 
 const allowedOrigins = [
-  process.env.MAIN_WEBSITE_URL,
-  "https://ticketing.halaleventbrite.co.ke",
+  "https://halal-eventbrite.vercel.app",
   "https://halaleventbrite.co.ke",
-  "https://www.halaleventbrite.co.ke", // add if applicable
+  "https://www.halaleventbrite.co.ke",
+  "https://ticketing.halaleventbrite.co.ke",
   "http://localhost:5173",
   "http://localhost:5174",
-]
-  .filter(Boolean)
-  .map((o) => o.replace(/\/$/, ""));
+];
 
 const corsOptions = {
   origin(origin, callback) {
-    // allow server-side requests / mobile apps
     if (!origin) return callback(null, true);
 
     const normalized = origin.replace(/\/$/, "");
@@ -52,10 +49,10 @@ const corsOptions = {
 
     console.log("Blocked Origin:", origin);
 
-    callback(new Error(`CORS blocked origin: ${origin}`));
+    callback(null, false);
   },
 
-  methods: ["GET", "POST", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
