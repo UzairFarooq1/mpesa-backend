@@ -289,7 +289,7 @@ router.post("/api/stkpush", async (req, res) => {
         PartyB: shortcode,
         PhoneNumber: phoneNumber,
         CallBackURL: MPESA_CALLBACK_URL,
-        AccountReference: ticketId,
+        AccountReference: event,
         TransactionDesc: event,
       },
       { headers: { Authorization: `Bearer ${accessToken}` } },
