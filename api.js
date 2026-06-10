@@ -301,7 +301,7 @@ router.post("/api/stkpush", async (req, res) => {
         PhoneNumber: phoneNumber,
         CallBackURL: MPESA_CALLBACK_URL,
         AccountReference: accountReference,
-        TransactionDesc: accountReference,
+        TransactionDesc: event,
       },
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
