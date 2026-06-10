@@ -243,11 +243,22 @@ router.get("/api/access_token", async (req, res) => {
     });
   }
 });
+function sanitizeMpesaReference(text) {
+  return String(text || "Event-Payment")
+    .normalize("NFKD")
+    .replace(/[^\x20-\x7E]/g, "") // Remove non-ASCII characters
+    .replace(/['’"]/g, "") // Remove apostrophes and quotes
+    .replace(/[^a-zA-Z0-9\s-]/g, "") // Keep letters, numbers, spaces, hyphens
+    .trim()
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .substring(0, 20); // Optional: limit length
+}
 
 router.post("/api/stkpush", async (req, res) => {
   try {
     const phoneNumber = normalizeMpesaPhone(req.body.phone);
     const roundedAmount = normalizeAmount(req.body.amount);
+    const accountReference = sanitizeMpesaReference(req.body.event);
     const event = req.body.event || "Event Payment";
     const ticketIds = normalizeTicketIds(req.body);
     const ticketId = ticketIds[0] || null;
@@ -289,8 +300,8 @@ router.post("/api/stkpush", async (req, res) => {
         PartyB: shortcode,
         PhoneNumber: phoneNumber,
         CallBackURL: MPESA_CALLBACK_URL,
-        AccountReference: event,
-        TransactionDesc: event,
+        AccountReference: accountReference,
+        TransactionDesc: accountReference,
       },
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
